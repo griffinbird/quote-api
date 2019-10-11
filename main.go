@@ -21,52 +21,30 @@ func main() {
 }
 
 func homePage(writer http.ResponseWriter, request *http.Request) {
-	_, err := fmt.Fprintf(writer, "Welcome to the inspirational quote API homepage")
-	if err != nil {
-		log.Panic(err)
-	}
+	writeResponseOrPanic(writer, "Welcome to the inspirational quote API homepage")
 }
 
 func quotes(writer http.ResponseWriter, request *http.Request) {
 	if request.Method == http.MethodPost {
 		newQuote(writer, request)
 	} else {
-		_, err := fmt.Fprintf(writer, "Invalid request method")
-		if err != nil {
-			log.Panic(err)
-		}
+		writeResponseOrPanic(writer, "Invalid request method")
 	}
 }
 
 func newQuote(writer http.ResponseWriter, request *http.Request) {
-	body, err := ioutil.ReadAll(request.Body)
+	quote, err := NewQuoteFromRequest(request)
 	if err != nil {
-		_, err = fmt.Fprintf(writer, "Error: cannot read request body.")
-		if err != nil {
-			log.Panic(err)
-		}
+		writeResponseOrPanic(writer, fmt.Sprintf("error unable to create a quote from request data.\nmessage: %s\n", err.Error()))
 		return
 	}
 
-	var quote quoteStruct
-	err = json.Unmarshal(body, &quote)
-	if  err != nil {
-		_, err = fmt.Fprintf(writer, "Error: cannot unmarshal request body.")
-		if err != nil {
-			log.Panic(err)
-		}
-		return
-	}
+	writeResponseOrPanic(writer, fmt.Sprintf("Quote added: \"%s\"\n", quote.Quote))
+}
 
-	if quote.Quote == "" {
-		_, err = fmt.Fprintf(writer, "Error: please enter a quote.")
-		if err != nil {
-			log.Panic(err)
-		}
-		return
-	}
-
-	_, err = fmt.Fprintf(writer, "Quote added: \"%s\"\n", quote.Quote)
+// Will write a response using the http.ResponseWriter. If it fails it will panic.
+func writeResponseOrPanic(writer http.ResponseWriter, message string) {
+	_, err := fmt.Fprint(writer, message)
 	if err != nil {
 		log.Panic(err)
 	}
