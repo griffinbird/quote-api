@@ -30,3 +30,10 @@ func NewQuoteFromRequest(request *http.Request) (*QuoteStruct, error) {
 
 	return &quote, nil
 }
+
+func (quote *QuoteStruct) storeInDatabase() error {
+	query := "INSERT INTO quotes (id, quote) VALUES (?, ?)"
+	_, err := ExecDB(query, nil, quote.Quote)
+
+	return err
+}

@@ -39,6 +39,12 @@ func newQuote(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	err = quote.storeInDatabase()
+	if err != nil {
+		writeResponseOrPanic(writer, fmt.Sprintf("error while storing quote in database.\nmessage: %s\n", err.Error()))
+		return
+	}
+
 	writeResponseOrPanic(writer, fmt.Sprintf("Quote added: \"%s\"\n", quote.Quote))
 }
 
