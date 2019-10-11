@@ -3,13 +3,12 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 )
 
-type quoteStruct struct {
-	Quote string `json:"quote"`
+type JsonMessage struct {
+	Message string `json:"message"`
 }
 
 func main() {
@@ -21,7 +20,7 @@ func main() {
 }
 
 func homePage(writer http.ResponseWriter, request *http.Request) {
-	writeResponseOrPanic(writer, "Welcome to the inspirational quote API homepage")
+	writeJson(writer, &JsonMessage{"welcome to the inspirational quote homepage"}, 200)
 }
 
 func quotes(writer http.ResponseWriter, request *http.Request) {
@@ -35,33 +34,45 @@ func quotes(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	writeResponseOrPanic(writer, "Invalid request method")
+	writeJson(writer, &JsonMessage{"invalid request method"}, 422)
 }
 
 func newQuote(writer http.ResponseWriter, request *http.Request) {
 	quote, err := NewQuoteFromRequest(request)
 	if err != nil {
-		writeResponseOrPanic(writer, fmt.Sprintf("error unable to create a quote from request data.\nmessage: %s\n", err.Error()))
+		writeJson(writer, &JsonMessage{err.Error()}, 422)
 		return
 	}
 
 	err = quote.storeInDatabase()
 	if err != nil {
-		writeResponseOrPanic(writer, fmt.Sprintf("error while storing quote in database.\nmessage: %s\n", err.Error()))
+		writeJson(writer, &JsonMessage{err.Error()}, 422)
 		return
 	}
 
-	writeResponseOrPanic(writer, fmt.Sprintf("Quote added: \"%s\"\n", quote.Quote))
+	writeJson(writer, &JsonMessage{"quote added"}, 200)
 }
 
 func getRandomQuote(writer http.ResponseWriter) {
 	quoteStruct, err := RandomQuoteFromDatabase()
 	if err != nil {
-		writeResponseOrPanic(writer, fmt.Sprintf("Error while getting quote form database\n%s\n", err.Error()))
+		writeJson(writer, JsonMessage{err.Error()}, 422)
 		return
 	}
 
-	writeResponseOrPanic(writer, fmt.Sprintf(`{"quote": "%s"}`, quoteStruct.Quote))
+	writeJson(writer, quoteStruct, 200)
+}
+
+func writeJson(writer http.ResponseWriter, data interface{}, status int) {
+	writer.Header().Set("Content-Type", "application/json")
+	writer.WriteHeader(status)
+
+	jsonBytes, err := json.Marshal(data)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	writeResponseOrPanic(writer, string(jsonBytes))
 }
 
 // Will write a response using the http.ResponseWriter. If it fails it will panic.
