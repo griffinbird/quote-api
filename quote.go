@@ -31,6 +31,30 @@ func NewQuoteFromRequest(request *http.Request) (*QuoteStruct, error) {
 	return &quote, nil
 }
 
+func RandomQuoteFromDatabase() (*QuoteStruct, error) {
+	query := "SELECT quote FROM quotes ORDER BY RANDOM() LIMIT 1"
+	row, err := QueryDB(query)
+	if err != nil {
+		return nil, err
+	}
+
+	if !row.Next() {
+		return nil, errors.New("no quote in database found")
+	}
+
+	var quote string
+	err = row.Scan(&quote)
+	if err != nil {
+		return nil, err
+	}
+
+	quoteStruct := &QuoteStruct{
+		Quote: quote,
+	}
+
+	return quoteStruct, nil
+}
+
 func (quote *QuoteStruct) storeInDatabase() error {
 	query := "INSERT INTO quotes (id, quote) VALUES (?, ?)"
 	_, err := ExecDB(query, nil, quote.Quote)
