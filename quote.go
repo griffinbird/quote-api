@@ -13,6 +13,7 @@ type QuoteStruct struct {
 
 // Create a new quote from an HTTP request.
 func NewQuoteFromRequest(request *http.Request) (*QuoteStruct, error) {
+
 	body, err := ioutil.ReadAll(request.Body)
 	if err != nil {
 		return nil, err

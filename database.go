@@ -2,13 +2,19 @@ package main
 
 import (
 	"database/sql"
-	_ "github.com/mattn/go-sqlite3"
+	"fmt"
+	_ "github.com/lib/pq"
 	"log"
 )
 
 const (
-	DRIVER = "sqlite3"
-	SQLITE_DB_LOCATION = "./quote-api.sqlite"
+	POSTGRES_DRIVER ="postgres"
+	POSTGRES_LOCATION ="postgres://postgres:postgres@10.0.75.1:5432/postgres?sslmode=disable"
+	host     = "localhost"
+	port     = 5432
+	user     = "postgres"
+	password = "postgres"
+	dbname   = "postgres"
 )
 
 func ExecDB(sqlStatement string, args ...interface{}) (sql.Result, error) {
@@ -27,10 +33,30 @@ func QueryDB(sqlStatement string, args ...interface{}) (*sql.Rows, error) {
 	return rows, err
 }
 
+/*
 func dbconnect() *sql.DB {
-	db, err := sql.Open(DRIVER, SQLITE_DB_LOCATION)
+	db, err := sql.Open(POSTGRES_DRIVER, POSTGRES_LOCATION)
 	if err != nil {
 		log.Fatal(err)
 	}
+	return db
+}
+*/
+
+func dbconnect() *sql.DB {
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
+		"password=%s dbname=%s sslmode=disable",
+		host, port, user, password, dbname)
+	//fmt.Println("About to open the DB connection")
+	db, err := sql.Open(POSTGRES_DRIVER, psqlInfo)
+	if err != nil {
+	//	fmt.Println(err)
+		log.Fatal(err)
+	}
+	err = db.Ping()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("Successfully connected!")
 	return db
 }

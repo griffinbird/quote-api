@@ -39,6 +39,7 @@ func quotes(writer http.ResponseWriter, request *http.Request) {
 
 func newQuote(writer http.ResponseWriter, request *http.Request) {
 	quote, err := NewQuoteFromRequest(request)
+	fmt.Printf("%+v\n", quote)
 	if err != nil {
 		writeJson(writer, &JsonMessage{err.Error()}, 422)
 		return
@@ -59,7 +60,6 @@ func getRandomQuote(writer http.ResponseWriter) {
 		writeJson(writer, JsonMessage{err.Error()}, 422)
 		return
 	}
-
 	writeJson(writer, quoteStruct, 200)
 }
 
@@ -71,7 +71,7 @@ func writeJson(writer http.ResponseWriter, data interface{}, status int) {
 	if err != nil {
 		log.Panic(err)
 	}
-
+	fmt.Println(string(jsonBytes)) //logs quote displayed from database
 	writeResponseOrPanic(writer, string(jsonBytes))
 }
 
